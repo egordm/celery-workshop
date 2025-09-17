@@ -16,14 +16,25 @@ Celery is a **distributed task queue** that lets you run code asynchronously in 
 Celery uses two key components to manage distributed tasks:
 
 ```mermaid
-graph LR
-    A[Your App] -->|1. Send Task| B[Broker<br/>data/broker.sqlite]
-    B -->|2. Deliver Task| C[Worker]
-    C -->|3. Store Result| D[Backend<br/>data/backend.sqlite]
-    A -->|4. Get Result| D
-    
-    style B fill:#e1f5fe
-    style D fill:#f3e5f5
+C4Container
+title Celery Workshop Architecture
+
+Container(app, "Your App", "Python", "Sends tasks and retrieves results")
+ContainerQueue(broker, "Broker", "SQLite", "Message queue for tasks<br/>data/broker.sqlite")
+Container(worker, "Worker", "Celery Worker", "Processes tasks")
+ContainerDb(backend, "Backend", "SQLite", "Stores task results<br/>data/backend.sqlite")
+
+Rel(app, broker, "1. Send Task")
+Rel(broker, worker, "2. Deliver Task")
+Rel(worker, backend, "3. Store Result")
+Rel(app, backend, "4. Get Result")
+
+UpdateLayoutConfig($c4ShapeInRow="3")
+
+UpdateRelStyle(app, broker, $offsetX="-30")
+UpdateRelStyle(broker, worker, $offsetX="-30")
+UpdateRelStyle(worker, backend, $offsetY="20")
+UpdateRelStyle(app, backend, $offsetY="20")
 ```
 
 - **🔄 Broker** (`data/broker.sqlite`): Message queue that stores tasks waiting to be processed
@@ -46,7 +57,7 @@ Open `src/celery_workshop/exercises_ch1_tasks.py` and complete five hands-on exe
 **What you'll learn**: `.delay()`, `.get()`, basic task calling
 
 ```bash
-uv run pytest tests/test_chapter_1.py::test_exercise_1_call_task -v
+uv run pytest tests/test_chapter1.py::test_exercise_1_call_task -v
 ```
 
 **Documentation**: [Calling Tasks](https://docs.celeryq.dev/en/latest/userguide/calling.html)
@@ -57,7 +68,7 @@ uv run pytest tests/test_chapter_1.py::test_exercise_1_call_task -v
 **What you'll learn**: `@shared_task`, task implementation
 
 ```bash
-uv run pytest tests/test_chapter_1.py::test_exercise_2_implement_task -v
+uv run pytest tests/test_chapter1.py::test_exercise_2_implement_task -v
 ```
 
 **Documentation**: [Creating Tasks](https://docs.celeryq.dev/en/latest/userguide/tasks.html)
@@ -68,7 +79,7 @@ uv run pytest tests/test_chapter_1.py::test_exercise_2_implement_task -v
 **What you'll learn**: Parallel execution, result collection
 
 ```bash
-uv run pytest tests/test_chapter_1.py::test_exercise_3_multiple_tasks -v
+uv run pytest tests/test_chapter1.py::test_exercise_3_multiple_tasks -v
 ```
 
 **Documentation**: [Canvas: Primitives](https://docs.celeryq.dev/en/latest/userguide/canvas.html#primitives)
@@ -81,8 +92,8 @@ uv run pytest tests/test_chapter_1.py::test_exercise_3_multiple_tasks -v
 **What you'll learn**: Task chains, task groups, workflow dependencies, parallel workflows
 
 ```bash
-uv run pytest tests/test_chapter_1.py::test_exercise_4_task_chain -v
-uv run pytest tests/test_chapter_1.py::test_exercise_4_task_group -v
+uv run pytest tests/test_chapter1.py::test_exercise_4_task_chain -v
+uv run pytest tests/test_chapter1.py::test_exercise_4_task_group -v
 ```
 
 **Documentation**: [Canvas: Chains and Groups](https://docs.celeryq.dev/en/latest/userguide/canvas.html#chains)
@@ -93,7 +104,7 @@ uv run pytest tests/test_chapter_1.py::test_exercise_4_task_group -v
 **What you'll learn**: Queue routing, worker specialization, `apply_async(queue=...)`
 
 ```bash
-uv run pytest tests/test_chapter_1.py::test_exercise_5_queue_routing -v
+uv run pytest tests/test_chapter1.py::test_exercise_5_queue_routing -v
 ```
 
 **Two approaches for queue routing:**
@@ -156,7 +167,7 @@ uv run celery -A celery_workshop.celery inspect stats
 ## Run All Tests
 
 ```bash
-uv run pytest tests/test_chapter_1.py -v
+uv run pytest tests/test_chapter1.py -v
 ```
 
 ## Key Concepts
