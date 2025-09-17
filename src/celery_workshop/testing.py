@@ -1,5 +1,4 @@
 import contextlib
-import logging
 import multiprocessing
 import time
 from collections.abc import Iterator
@@ -48,7 +47,6 @@ def start_worker(argv: list[str] | None = None, concurrency: int = 1, queues: li
 def start_worker_in_process(
     argv: list[str] | None = None, concurrency: int = 1, queues: list[str] | None = None
 ) -> Iterator[multiprocessing.Process]:
-    multiprocessing.log_to_stderr(logging.INFO)
     worker_process = multiprocessing.Process(target=start_worker, args=(argv, concurrency, queues))
     worker_process.start()
 
