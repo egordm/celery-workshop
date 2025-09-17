@@ -20,6 +20,7 @@ app.conf.update(basic_celery_config)
 # Celery app will look in all these modules for @app.task / @shared_task decorated tasks
 app.autodiscover_tasks([
     "celery_workshop.case_1_tasks",
+    "celery_workshop.exercises_ch1_tasks",
 ])
 
 

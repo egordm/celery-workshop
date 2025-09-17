@@ -43,18 +43,26 @@ output-format = "concise"
 format.preview = true
 lint.select = [ "ALL" ]
 lint.ignore = [
-  "COM812", # Conflicting rules (a), ruff itself suggest disabling them.
-  "CPY001", # Reuse covers copyright checks.
-  "D",      # All docstring rules
-  "D203",   # Conflicting rules (a), ruff itself suggest disabling them.
-  "D213",   # Conflicting rules (a), ruff itself suggest disabling them.
-  "DOC",    # All docstring rules
-  "EM101",  # do not enforce message in variable when raising an exception.
-  "G004",   # Using f-strings for simplicity cause it's not production code
-  "TC006",  # Let's not force quoting the first param of typing.cast
-  "TRY003", # simplify exception messages
+  "COM812",  # Conflicting rules (a), ruff itself suggest disabling them.
+  "CPY001",  # Reuse covers copyright checks.
+  "D",       # All docstring rules
+  "D203",    # Conflicting rules (a), ruff itself suggest disabling them.
+  "D213",    # Conflicting rules (a), ruff itself suggest disabling them.
+  "DOC",     # All docstring rules
+  "EM101",   # do not enforce message in variable when raising an exception.
+  "ERA001",  # Allow comented out code
+  "FIX002",  # Allow TODO comments
+  "G004",    # Using f-strings for simplicity cause it's not production code
+  "PLC0415", # Allow imports out of order
+  "TC006",   # Let's not force quoting the first param of typing.cast
+  "TD002",   # Allow TODO comments
+  "TD003",   # Allow TODO comments
+  "TRY003",  # simplify exception messages
 ]
 
+lint.per-file-ignores."./scripts/*" = [
+  "T201", # Allow print statements in demo scripts
+]
 lint.per-file-ignores."./tests/*" = [
   "ARG",     # Unused function args -> fixtures nevertheless are functionally relevant...
   "D",       # All docstring rules

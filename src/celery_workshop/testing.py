@@ -3,7 +3,7 @@ from collections.abc import Iterator
 
 
 def start_worker(argv: list[str], name_prefix: str = "WORKER") -> None:
-    from celery_workshop.celery import app  # noqa: PLC0415
+    from celery_workshop.celery import app
 
     # Give our process a legible name for logging
     multiprocessing.current_process().name = name_prefix + multiprocessing.current_process().name.replace("Process", "")
