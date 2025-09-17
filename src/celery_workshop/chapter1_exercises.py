@@ -2,29 +2,24 @@
 Chapter 1: Introduction to Celery Tasks
 
 This file contains exercises for learning Celery basics.
+Complete the TODO sections and run the tests to verify your solutions.
 """
-
-import logging
-import time
-from typing import TYPE_CHECKING
 
 from celery import shared_task
 
-if TYPE_CHECKING:
-    from celery.result import AsyncResult
-
-logger = logging.getLogger(__name__)
+from .chapter1 import (
+    exercise1_add_numbers,
+    exercise3_multiply_numbers,
+    exercise4_add_ten,
+    exercise4_double_number,
+    exercise5_cpu_intensive_task,
+    exercise5_io_task,
+    exercise5_quick_task,
+)
 
 # =============================================================================
 # EXERCISE 1: Learn to call tasks
 # =============================================================================
-
-
-@shared_task(name="exercise1_add_numbers")
-def exercise1_add_numbers(x: int, y: int) -> int:
-    """PROVIDED: Simple arithmetic task for learning .delay() and .apply_async()"""
-    time.sleep(0.5)  # Simulate work
-    return x + y
 
 
 def run_add_numbers(x: int, y: int) -> int:
@@ -57,6 +52,8 @@ def run_add_numbers(x: int, y: int) -> int:
 @shared_task(name="exercise2_greet_user")
 def exercise2_greet_user(name: str) -> str:
     """Greet a user by name."""
+    import time
+
     time.sleep(0.1)  # Simulate work
     return f"Hello, {name}!"
 
@@ -64,13 +61,6 @@ def exercise2_greet_user(name: str) -> str:
 # =============================================================================
 # EXERCISE 3: Running multiple tasks (parallel execution)
 # =============================================================================
-
-
-@shared_task(name="exercise3_multiply_numbers")
-def exercise3_multiply_numbers(x: int, y: int) -> int:
-    """PROVIDED: Multiplication task for parallel execution patterns"""
-    time.sleep(0.3)  # Simulate work
-    return x * y
 
 
 def run_multiple_tasks(numbers: list[tuple[int, int]]) -> list[int]:
@@ -86,6 +76,11 @@ def run_multiple_tasks(numbers: list[tuple[int, int]]) -> list[int]:
     Example: numbers = [(2, 3), (4, 5)] should return [6, 20]
     """
     # SOLUTION:
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        from celery.result import AsyncResult
+
     results: list[AsyncResult[int]] = []
     for x, y in numbers:
         result = exercise3_multiply_numbers.delay(x, y)
@@ -98,20 +93,6 @@ def run_multiple_tasks(numbers: list[tuple[int, int]]) -> list[int]:
 # =============================================================================
 # EXERCISE 4: Orchestrating tasks with chains and groups
 # =============================================================================
-
-
-@shared_task(name="exercise4_double_number")
-def exercise4_double_number(x: int) -> int:
-    """PROVIDED: Double a number"""
-    time.sleep(0.2)  # Simulate work
-    return x * 2
-
-
-@shared_task(name="exercise4_add_ten")
-def exercise4_add_ten(x: int) -> int:
-    """PROVIDED: Add ten to a number"""
-    time.sleep(0.2)  # Simulate work
-    return x + 10
 
 
 def run_task_chain(number: int) -> int:
@@ -164,33 +145,6 @@ def run_task_group(numbers: list[int]) -> list[int]:
 # =============================================================================
 # Exercise 5: Queue Routing and Worker Specialization
 # =============================================================================
-
-
-@shared_task(name="exercise5_cpu_intensive_task")
-def exercise5_cpu_intensive_task(number: int) -> int:
-    """PROVIDED: CPU-intensive task that should run on 'compute' queue"""
-    time.sleep(0.5)  # Simulate CPU-intensive work
-    result = number**2
-    logger.info(f"CPU task: {number}^2 = {result}")
-    return result
-
-
-@shared_task(name="exercise5_io_task")
-def exercise5_io_task(filename: str) -> str:
-    """PROVIDED: I/O task that should run on 'io' queue"""
-    time.sleep(0.3)  # Simulate I/O operation
-    result = f"Processed file: {filename}"
-    logger.info(f"I/O task: {result}")
-    return result
-
-
-@shared_task(name="exercise5_quick_task")
-def exercise5_quick_task(message: str) -> str:
-    """PROVIDED: Quick task that runs on default queue"""
-    time.sleep(0.1)  # Quick operation
-    result = f"Quick: {message}"
-    logger.info(f"Quick task: {result}")
-    return result
 
 
 def run_mixed_workload() -> dict[str, list[str] | list[int]]:

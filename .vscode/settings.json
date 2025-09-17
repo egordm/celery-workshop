@@ -10,5 +10,6 @@
     "python.analysis.typeEvaluation.strictSetInference": true,
     "python.analysis.typeEvaluation.strictDictionaryInference": true,
     "python.analysis.typeEvaluation.strictListInference": true,
-    "python.analysis.typeEvaluation.deprecateTypingAliases": true
+    "python.analysis.typeEvaluation.deprecateTypingAliases": true,
+    "python.terminal.activateEnvInCurrentTerminal": true
 }

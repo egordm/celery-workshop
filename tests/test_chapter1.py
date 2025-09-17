@@ -17,7 +17,7 @@ from collections.abc import Iterator
 import pytest
 
 from celery_workshop.celery import app
-from celery_workshop.exercises_ch1_tasks import (
+from celery_workshop.chapter1_exercises import (
     run_add_numbers,
     run_mixed_workload,
     run_multiple_tasks,
@@ -89,7 +89,7 @@ def test_exercise_2_implement_task():
     What you learn: @shared_task, task implementation
     """
     try:
-        from celery_workshop.exercises_ch1_tasks import exercise2_greet_user
+        from celery_workshop.chapter1_exercises import exercise2_greet_user
 
         result = exercise2_greet_user.delay("Alice")
         task_result = result.get(timeout=5)

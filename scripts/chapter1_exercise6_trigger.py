@@ -5,7 +5,12 @@ Run this after starting workers with:
 uv run celery -A celery_workshop.celery worker --loglevel=info
 """
 
-from celery_workshop.exercises_ch1_tasks import exercise1_add_numbers
+from typing import TYPE_CHECKING
+
+from celery_workshop.chapter1 import exercise1_add_numbers
+
+if TYPE_CHECKING:
+    from celery.result import AsyncResult
 
 
 def main():
@@ -17,7 +22,7 @@ def main():
     print(f"Task {result.id}: 10 + 20 = {result.get()}")
 
     # Multiple tasks
-    results = []
+    results: list[AsyncResult[int]] = []
     for i in range(3):
         result = exercise1_add_numbers.delay(i, i * 2)
         results.append(result)

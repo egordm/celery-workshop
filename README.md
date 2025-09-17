@@ -49,7 +49,9 @@ UpdateRelStyle(app, backend, $offsetY="20")
 
 ## Chapter 1: Celery Basics
 
-Open `src/celery_workshop/exercises_ch1_tasks.py` and complete five hands-on exercises:
+Open `src/celery_workshop/chapter1_exercises.py` and complete five hands-on exercises:
+
+**Note**: The provided tasks are in `src/celery_workshop/chapter1.py` - do not modify this file.
 
 ### Exercise 1: Call a Task
 **Task**: Complete `run_add_numbers()` - call the provided task and return result.
