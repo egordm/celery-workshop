@@ -13,7 +13,7 @@ Celery is a **distributed task queue** that lets you run code asynchronously in 
 
 ## Chapter 1: Celery Basics
 
-Learn through four hands-on exercises:
+Learn through five hands-on exercises:
 
 ### Exercise 1: Call a Task
 Learn to use `.delay()` and `.apply_async()` by implementing `run_add_numbers()`.
@@ -52,6 +52,15 @@ uv run pytest tests/test_chapter_1.py::test_exercise_4_task_group -v
 
 **Documentation**: [Canvas: Chains and Groups](https://docs.celeryq.dev/en/latest/userguide/canvas.html#chains)
 
+### Exercise 5: Queue Routing (Worker Specialization)
+Learn to route tasks to different queues for worker specialization.
+
+```bash
+uv run pytest tests/test_chapter_1.py::test_exercise_5_queue_routing -v
+```
+
+**Documentation**: [Routing Tasks](https://docs.celeryq.dev/en/latest/userguide/routing.html)
+
 ## Your Tasks
 
 Open `src/celery_workshop/exercises_ch1_tasks.py` and:
@@ -80,6 +89,15 @@ Create a chain where tasks run sequentially (output → input).
 Create a group where tasks run in parallel.
 
 **What you'll learn**: Task groups, parallel workflows
+
+### Task 5: Complete `run_mixed_workload()`
+Route different tasks to different queues (compute, io, default).
+
+**What you'll learn**: Queue routing, worker specialization, apply_async(queue=...)
+
+**Two approaches for queue routing:**
+1. **Manual routing**: `task.apply_async(queue='compute')` (used in this exercise)
+2. **Config-based routing**: Set `app.conf.task_routes` for automatic routing
 
 ## Run All Tests
 

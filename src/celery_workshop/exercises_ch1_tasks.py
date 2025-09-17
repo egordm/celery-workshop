@@ -4,10 +4,16 @@ Chapter 1: Introduction to Celery Tasks
 This file contains exercises for learning Celery basics.
 """
 
+import logging
 import time
+from typing import TYPE_CHECKING, Any
 
 from celery import shared_task
-from celery.result import AsyncResult
+
+if TYPE_CHECKING:
+    from celery.result import AsyncResult
+
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # EXERCISE 1: Learn to call tasks
@@ -153,3 +159,94 @@ def run_task_group(numbers: list[int]) -> list[int]:
     job = group(exercise4_double_number.s(num) for num in numbers)
     result = job.apply_async()
     return result.get(timeout=10)
+
+
+# =============================================================================
+# Exercise 5: Queue Routing and Worker Specialization
+# =============================================================================
+
+
+@shared_task(name="exercise5_cpu_intensive_task")
+def exercise5_cpu_intensive_task(number: int) -> int:
+    """PROVIDED: CPU-intensive task that should run on 'compute' queue"""
+    time.sleep(0.5)  # Simulate CPU-intensive work
+    result = number**2
+    logger.info(f"CPU task: {number}^2 = {result}")
+    return result
+
+
+@shared_task(name="exercise5_io_task")
+def exercise5_io_task(filename: str) -> str:
+    """PROVIDED: I/O task that should run on 'io' queue"""
+    time.sleep(0.3)  # Simulate I/O operation
+    result = f"Processed file: {filename}"
+    logger.info(f"I/O task: {result}")
+    return result
+
+
+@shared_task(name="exercise5_quick_task")
+def exercise5_quick_task(message: str) -> str:
+    """PROVIDED: Quick task that runs on default queue"""
+    time.sleep(0.1)  # Quick operation
+    result = f"Quick: {message}"
+    logger.info(f"Quick task: {result}")
+    return result
+
+
+def run_mixed_workload():
+    """
+    TODO: Run a mixed workload across different queues
+
+    Requirements:
+    - Run 2 CPU-intensive tasks (numbers 4, 9) on 'compute' queue
+    - Run 2 I/O tasks (files 'data.csv', 'report.pdf') on 'io' queue
+    - Run 2 quick tasks (messages 'hello', 'world') on default queue
+    - All tasks should run in parallel using different workers
+    - Return results organized by queue type
+
+    Hints:
+    - Use .apply_async(queue='queue_name') to route tasks to specific queues
+    - Collect results and organize them by task type
+    - Use timeout when getting results
+
+    NOTE: Queue routing can also be configured globally via Celery settings:
+    - task_routes: Maps task names to queues automatically
+    - task_queue_ha_policy: High availability settings
+    - task_queues: Define available queues and their properties
+
+    Example config-based routing:
+    app.conf.task_routes = {
+        'exercise5_cpu_intensive_task': {'queue': 'compute'},
+        'exercise5_io_task': {'queue': 'io'},
+    }
+
+    Expected return format:
+    {
+        'cpu_results': [16, 81],  # 4^2, 9^2
+        'io_results': ['Processed file: data.csv', 'Processed file: report.pdf'],
+        'quick_results': ['Quick: hello', 'Quick: world']
+    }
+    """
+    # SOLUTION:
+
+    # Start CPU-intensive tasks on 'compute' queue
+    cpu_tasks = [
+        exercise5_cpu_intensive_task.apply_async(args=[4], queue="compute"),
+        exercise5_cpu_intensive_task.apply_async(args=[9], queue="compute"),
+    ]
+
+    # Start I/O tasks on 'io' queue
+    io_tasks = [
+        exercise5_io_task.apply_async(args=["data.csv"], queue="io"),
+        exercise5_io_task.apply_async(args=["report.pdf"], queue="io"),
+    ]
+
+    # Start quick tasks on default queue (no queue specified)
+    quick_tasks = [exercise5_quick_task.apply_async(args=["hello"]), exercise5_quick_task.apply_async(args=["world"])]
+
+    # Collect results
+    cpu_results = [task.get(timeout=10) for task in cpu_tasks]
+    io_results = [task.get(timeout=10) for task in io_tasks]
+    quick_results = [task.get(timeout=10) for task in quick_tasks]
+
+    return {"cpu_results": cpu_results, "io_results": io_results, "quick_results": quick_results}

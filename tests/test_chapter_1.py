@@ -17,7 +17,13 @@ from collections.abc import Iterator
 import pytest
 
 from celery_workshop.celery import app
-from celery_workshop.exercises_ch1_tasks import run_add_numbers, run_multiple_tasks, run_task_chain, run_task_group
+from celery_workshop.exercises_ch1_tasks import (
+    run_add_numbers,
+    run_mixed_workload,
+    run_multiple_tasks,
+    run_task_chain,
+    run_task_group,
+)
 from celery_workshop.testing import measure_execution_time, start_worker_in_process
 
 logger = logging.getLogger(__name__)
@@ -39,6 +45,24 @@ def single_worker() -> Iterator[multiprocessing.Process]:
 def parallel_worker() -> Iterator[multiprocessing.Process]:
     """Start a Celery worker with higher concurrency for parallel tests."""
     yield from start_worker_in_process(concurrency=4)
+
+
+@pytest.fixture(scope="module")
+def compute_worker() -> Iterator[multiprocessing.Process]:
+    """Start a worker that handles 'compute' queue with concurrency."""
+    yield from start_worker_in_process(queues=["compute"], concurrency=2)
+
+
+@pytest.fixture(scope="module")
+def io_worker() -> Iterator[multiprocessing.Process]:
+    """Start a worker that handles 'io' queue with concurrency."""
+    yield from start_worker_in_process(queues=["io"], concurrency=2)
+
+
+@pytest.fixture(scope="module")
+def default_worker() -> Iterator[multiprocessing.Process]:
+    """Start a worker that handles default 'celery' queue with concurrency."""
+    yield from start_worker_in_process(queues=["celery"], concurrency=2)
 
 
 @pytest.mark.usefixtures("single_worker")
@@ -149,3 +173,36 @@ def test_exercise_4_task_chain():
     result = run_task_chain(5)
     # 5 -> double (10) -> add ten (20)
     assert result == 20
+
+
+@pytest.mark.usefixtures("compute_worker", "io_worker", "default_worker")
+def test_exercise_5_queue_routing():
+    """
+    Exercise 5: Queue routing and worker specialization
+
+    Test that your run_mixed_workload function correctly routes tasks
+    to different queues and worker specialization works correctly.
+
+    What you learn: Queue routing, worker specialization, .apply_async(queue=...)
+
+    Note: With concurrent workers (concurrency=2 each), if queue routing is
+    implemented incorrectly, all tasks might run on the same worker type.
+    Check the terminal output during test execution to see WORKER1/2/3 distribution.
+    """
+    # Test the main functionality
+    results = run_mixed_workload()
+
+    # Verify structure and results
+    expected_keys = {"cpu_results", "io_results", "quick_results"}
+    assert set(results.keys()) == expected_keys
+
+    # Verify CPU results (4^2=16, 9^2=81)
+    assert results["cpu_results"] == [16, 81]
+
+    # Verify I/O results
+    expected_io = ["Processed file: data.csv", "Processed file: report.pdf"]
+    assert results["io_results"] == expected_io
+
+    # Verify quick results
+    expected_quick = ["Quick: hello", "Quick: world"]
+    assert results["quick_results"] == expected_quick
