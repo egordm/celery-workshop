@@ -1,26 +1,44 @@
+import contextlib
 import multiprocessing
+import time
 from collections.abc import Iterator
 
 
-def start_worker(argv: list[str], name_prefix: str = "WORKER") -> None:
+@contextlib.contextmanager
+def measure_execution_time():
+    """Context manager to measure execution time."""
+    start_time = time.time()
+    try:
+        yield lambda: time.time() - start_time
+    finally:
+        pass
+
+
+def start_worker(argv: list[str], concurrency: int = 1) -> None:
     from celery_workshop.celery import app
 
-    # Give our process a legible name for logging
-    multiprocessing.current_process().name = name_prefix + multiprocessing.current_process().name.replace("Process", "")
+    # Process naming is now handled automatically by Celery app signals
 
-    # Configure for single-process worker
-    app.conf.update(
-        worker_concurrency=1,
-        worker_pool="solo",  # Single-threaded execution
-    )
+    # Configure worker
+    if concurrency == 1:
+        app.conf.update(
+            worker_concurrency=1,
+            worker_pool="solo",  # Single-threaded execution
+            worker_prefetch_multiplier=1,  # Process one task at a time
+        )
+        worker_args = ["--quiet", "worker", "--loglevel=INFO", *argv]
+    else:
+        app.conf.update(
+            worker_concurrency=concurrency,
+            worker_prefetch_multiplier=1,  # Important: prevent task hoarding
+        )
+        worker_args = ["--quiet", "worker", "--loglevel=INFO", f"--concurrency={concurrency}", *argv]
 
-    app.worker_main(["--quiet", "worker", "--loglevel=INFO", *argv])
+    app.worker_main(worker_args)
 
 
-def start_worker_in_process(
-    argv: list[str] | None = None, name_prefix: str = "WORKER"
-) -> Iterator[multiprocessing.Process]:
-    worker_process = multiprocessing.Process(target=start_worker, args=(argv or [], name_prefix))
+def start_worker_in_process(argv: list[str] | None = None, concurrency: int = 1) -> Iterator[multiprocessing.Process]:
+    worker_process = multiprocessing.Process(target=start_worker, args=(argv or [], concurrency))
     worker_process.start()
 
     try:

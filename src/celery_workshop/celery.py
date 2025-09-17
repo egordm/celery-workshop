@@ -1,4 +1,5 @@
 import logging
+import multiprocessing
 from typing import Any
 
 from celery import Celery, signals
@@ -36,3 +37,30 @@ def after_setup_celery_logger(logger: logging.Logger, *args: list[Any], **kwargs
     _ = args, kwargs  # Unused
     logger.propagate = True
     logger.setLevel(logging.INFO)
+
+
+@signals.worker_init.connect()
+def setup_main_worker_process_name(**_kwargs: dict[str, Any]) -> None:
+    """Give main worker process a readable name."""
+    current_process = multiprocessing.current_process()
+    if "Process" in current_process.name:
+        # Handle both "Process-1" and "Process" patterns
+        current_process.name = current_process.name.replace("Process-", "WORKER").replace("Process", "WORKER")
+
+
+@signals.worker_ready.connect()
+def setup_main_worker_process_name_fallback(**_kwargs: dict[str, Any]) -> None:
+    """Give main worker process a readable name."""
+    current_process = multiprocessing.current_process()
+    if "Process" in current_process.name:
+        current_process.name = current_process.name.replace("Process-", "WORKER").replace("Process", "WORKER")
+
+
+@signals.worker_process_init.connect()
+def setup_worker_child_process_name(**_kwargs: dict[str, Any]) -> None:
+    """Rename worker child processes for better logging."""
+    current_process = multiprocessing.current_process()
+    # Extract worker number from original name (e.g., "ForkPoolWorker-1" -> "1")
+    if "PoolWorker-" in current_process.name:
+        worker_num = current_process.name.split("-")[-1]
+        current_process.name = f"WORKER-CHILD{worker_num}"
