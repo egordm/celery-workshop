@@ -11,6 +11,31 @@ Celery is a **distributed task queue** that lets you run code asynchronously in 
 - Background processing (emails, file processing, data analysis)
 - Scale across multiple machines easily
 
+## Celery Architecture: Broker and Backend
+
+Celery uses two key components to manage distributed tasks:
+
+```mermaid
+graph LR
+    A[Your App] -->|1. Send Task| B[Broker<br/>data/broker.sqlite]
+    B -->|2. Deliver Task| C[Worker]
+    C -->|3. Store Result| D[Backend<br/>data/backend.sqlite]
+    A -->|4. Get Result| D
+    
+    style B fill:#e1f5fe
+    style D fill:#f3e5f5
+```
+
+- **🔄 Broker** (`data/broker.sqlite`): Message queue that stores tasks waiting to be processed
+  - Your app sends tasks here with `.delay()` or `.apply_async()`
+  - Workers pull tasks from here to execute
+  
+- **💾 Backend** (`data/backend.sqlite`): Database that stores task results and metadata
+  - Workers store task results here when complete
+  - Your app retrieves results with `.get()`
+
+**💡 In Production**: Usually Redis/RabbitMQ for broker, PostgreSQL/Redis for backend. We use SQLite for simplicity!
+
 ## Chapter 1: Celery Basics
 
 Open `src/celery_workshop/exercises_ch1_tasks.py` and complete five hands-on exercises:
