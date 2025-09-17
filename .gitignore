@@ -11,3 +11,7 @@ wheels/
 
 data/*
 !data/.gitkeep
+
+
+.github/instructions/*
+WORKSHOP_INSTRUCTION.md
