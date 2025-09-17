@@ -6,7 +6,7 @@ This file contains exercises for learning Celery basics.
 
 import logging
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from celery import shared_task
 
@@ -193,7 +193,7 @@ def exercise5_quick_task(message: str) -> str:
     return result
 
 
-def run_mixed_workload():
+def run_mixed_workload() -> dict[str, list[str] | list[int]]:
     """
     TODO: Run a mixed workload across different queues
 
@@ -231,18 +231,18 @@ def run_mixed_workload():
 
     # Start CPU-intensive tasks on 'compute' queue
     cpu_tasks = [
-        exercise5_cpu_intensive_task.apply_async(args=[4], queue="compute"),
-        exercise5_cpu_intensive_task.apply_async(args=[9], queue="compute"),
+        exercise5_cpu_intensive_task.apply_async(args=[4], queue="compute"),  # pyright: ignore[reportArgumentType]
+        exercise5_cpu_intensive_task.apply_async(args=[9], queue="compute"),  # pyright: ignore[reportArgumentType]
     ]
 
     # Start I/O tasks on 'io' queue
     io_tasks = [
-        exercise5_io_task.apply_async(args=["data.csv"], queue="io"),
-        exercise5_io_task.apply_async(args=["report.pdf"], queue="io"),
+        exercise5_io_task.apply_async(args=["data.csv"], queue="io"),  # pyright: ignore[reportArgumentType]
+        exercise5_io_task.apply_async(args=["report.pdf"], queue="io"),  # pyright: ignore[reportArgumentType]
     ]
 
     # Start quick tasks on default queue (no queue specified)
-    quick_tasks = [exercise5_quick_task.apply_async(args=["hello"]), exercise5_quick_task.apply_async(args=["world"])]
+    quick_tasks = [exercise5_quick_task.apply_async(args=["hello"]), exercise5_quick_task.apply_async(args=["world"])]  # pyright: ignore[reportArgumentType]
 
     # Collect results
     cpu_results = [task.get(timeout=10) for task in cpu_tasks]
