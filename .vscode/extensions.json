@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "qwtel.sqlite-viewer",
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "charliermarsh.ruff"
+    ]
+}
