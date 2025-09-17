@@ -11,7 +11,7 @@ from celery_workshop.logging import configure_root_logger
 app = Celery(
     "celery_workshop",
     broker="sqlalchemy+sqlite:///./data/broker.sqlite",
-    backend="db+sqlite:///./data/results.sqlite",
+    backend="db+sqlite:///./data/backend.sqlite",
 )
 
 # Configure for testing

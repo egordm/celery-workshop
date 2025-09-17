@@ -77,6 +77,57 @@ uv run pytest tests/test_chapter_1.py::test_exercise_5_queue_routing -v
 
 **Documentation**: [Routing Tasks](https://docs.celeryq.dev/en/latest/userguide/routing.html)
 
+### Exercise 6 (Bonus): Infrastructure (Running Workers Separately)
+
+Learn to work with Celery outside of the test environment - start workers manually and monitor them.
+
+**What you'll learn**: Celery CLI, worker management, basic monitoring
+
+#### 1. Start Workers Manually
+
+In one terminal, start a Celery worker:
+```bash
+uv run celery -A celery_workshop.celery worker --loglevel=info
+```
+
+For multiple queues (from Exercise 5):
+```bash
+# Terminal 1: Worker for compute tasks
+uv run celery -A celery_workshop.celery worker --loglevel=info --queues=compute
+
+# Terminal 2: Worker for io tasks  
+uv run celery -A celery_workshop.celery worker --loglevel=info --queues=io
+
+# Terminal 3: Worker for default tasks
+uv run celery -A celery_workshop.celery worker --loglevel=info --queues=celery
+```
+
+#### 2. Trigger Tasks with Script
+
+In another terminal, run the task trigger script:
+```bash
+uv run python scripts/chapter1_exercise6_trigger.py
+```
+
+#### 3. Monitor Workers
+
+Check worker health and status:
+```bash
+# Health check
+uv run celery -A celery_workshop.celery inspect ping
+
+# Active tasks
+uv run celery -A celery_workshop.celery inspect active
+
+# Reserved tasks
+uv run celery -A celery_workshop.celery inspect reserved
+
+# Worker statistics
+uv run celery -A celery_workshop.celery inspect stats
+```
+
+**Documentation**: [Monitoring and Management Guide](https://docs.celeryq.dev/en/latest/userguide/monitoring.html)
+
 ## Run All Tests
 
 ```bash
