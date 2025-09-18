@@ -178,5 +178,17 @@ switch = [
 help = "Manage solutions in the codebase"
 cmd = "uv run ./scripts/manage_solutions.py"
 
+[tool.poe.tasks.create-empty-branch]
+help = "Create an empty git branch"
+sequence = [
+  { cmd = "git branch -D empty", help = "delete existing empty branch if any" },
+  { cmd = "git checkout -b empty", help = "create new empty branch" },
+  { cmd = "poe solutions remove", help = "remove solutions from code" },
+  { cmd = "git add .", help = "remove all files from index" },
+  { cmd = "git commit -m 'Initial empty commit'", help = "create initial empty commit" },
+  { cmd = "echo 'git push origin empty --force'", help = "push changes to remote" },
+]
+ignore_fail = true
+
 [tool.uv.sources]
 celery-workshop = { workspace = true }
