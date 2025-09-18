@@ -2,6 +2,24 @@
 
 A hands-on workshop for learning Celery distributed task processing.
 
+## Setup
+
+To get started with this workshop, clone the repository and install dependencies:
+
+**For workshop participants** (to follow along without seeing solutions):
+```bash
+git clone -b empty https://github.com/egordm/celery-workshop.git
+cd celery-workshop
+uv sync
+```
+
+**For instructors/reviewers** (to see completed solutions):
+```bash
+git clone https://github.com/egordm/celery-workshop.git
+cd celery-workshop
+uv sync
+```
+
 ## What is Celery?
 
 Celery is a **distributed task queue** that lets you run code asynchronously in the background.
