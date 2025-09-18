@@ -210,5 +210,28 @@ The `group()` approach is preferred for production code as it handles edge cases
 
 **Note on Parallel Execution**: The tests automatically start workers with appropriate concurrency. When you see logs showing different `WORKER-CHILD-1`, `WORKER-CHILD-2`, etc., that confirms tasks are running in parallel!
 
+## Troubleshooting
+
+### Exercise 6: Connection Refused Error
+
+If you get `ConnectionRefusedError: [Errno 61] Connection refused` when running the trigger script:
+
+1. **Check worker is running**: Make sure you started a worker with `uv run celery -A celery_workshop.celery worker --loglevel=info`
+2. **Verify configuration**: The workshop uses SQLite for broker/backend, not RabbitMQ/Redis
+3. **Wait for startup**: Give the worker a few seconds to fully start before running the trigger script
+
+### Understanding `.s()` Signatures
+
+The `.s()` method creates task "signatures" - think of them as packaged function calls:
+
+- **For chains**: `task1.s(args)` → `task2.s()` (output of task1 becomes input of task2)
+- **For groups**: `task.s(arg1)`, `task.s(arg2)` (each runs independently in parallel)
+
+### Import Errors
+
+All necessary imports (`chain`, `group`) are pre-configured at the top of `chapter1_exercises.py`. No need to add additional imports.
+
+**Note on Parallel Execution**: The tests automatically start workers with appropriate concurrency. When you see logs showing different `WORKER-CHILD-1`, `WORKER-CHILD-2`, etc., that confirms tasks are running in parallel!
+
 ## Additional Resources
 - [Celery Introduction](https://docs.celeryq.dev/en/latest/getting-started/introduction.html)

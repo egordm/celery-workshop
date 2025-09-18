@@ -5,7 +5,10 @@ This file contains exercises for learning Celery basics.
 Complete the TODO sections and run the tests to verify your solutions.
 """
 
-from celery import shared_task
+import time
+from typing import TYPE_CHECKING
+
+from celery import chain, group, shared_task
 
 from .chapter1 import (
     exercise1_add_numbers,
@@ -16,6 +19,9 @@ from .chapter1 import (
     exercise5_io_task,
     exercise5_quick_task,
 )
+
+if TYPE_CHECKING:
+    from celery.result import AsyncResult
 
 # =============================================================================
 # EXERCISE 1: Learn to call tasks
@@ -49,11 +55,11 @@ def run_add_numbers(x: int, y: int) -> int:
 
 
 # SOLUTION:
+
+
 @shared_task(name="exercise2_greet_user")
 def exercise2_greet_user(name: str) -> str:
-    """Greet a user by name."""
-    import time
-
+    """Greet a user with a personalized message"""
     time.sleep(0.1)  # Simulate work
     return f"Hello, {name}!"
 
@@ -74,13 +80,15 @@ def run_multiple_tasks(numbers: list[tuple[int, int]]) -> list[int]:
     - Return list of all results
 
     Example: numbers = [(2, 3), (4, 5)] should return [6, 20]
+
+    📝 NOTE: Exercise 3 vs Exercise 4b comparison:
+    Both run tasks in parallel, but different approaches:
+    - Exercise 3 (this one): Manual approach - call .delay() for each task,
+      collect results yourself
+    - Exercise 4b (run_task_group): Uses Celery's group() primitive - more
+      elegant and optimized for production
     """
     # SOLUTION:
-    from typing import TYPE_CHECKING
-
-    if TYPE_CHECKING:
-        from celery.result import AsyncResult
-
     results: list[AsyncResult[int]] = []
     for x, y in numbers:
         result = exercise3_multiply_numbers.delay(x, y)
@@ -100,19 +108,29 @@ def run_task_chain(number: int) -> int:
     TODO: Create a chain of tasks: double_number -> add_ten
 
     Requirements:
-    - Import: from celery import chain
     - Create a chain that first doubles the number, then adds 10
     - Use chain(task1.s(args), task2.s()) pattern
     - Call .apply_async() on the chain
     - Return the final result with .get(timeout=10)
 
+    What is .s()?
+    The .s() method creates a "signature" - think of it as a "partial" function call.
+    It packages up a task call with its arguments, but doesn't execute it yet.
+    This lets Celery build complex workflows where one task's output becomes
+    another task's input.
+
+    Example:
+    - exercise4_double_number.s(5) creates a signature for "double 5"
+    - exercise4_add_ten.s() creates a signature for "add 10 to whatever input I get"
+    - chain() connects them: 5 -> double (10) -> add ten (20)
+
     Example: number = 5 -> double (10) -> add ten (20)
     """
     # SOLUTION:
-    from celery import chain
-
-    workflow = chain(exercise4_double_number.s(number), exercise4_add_ten.s())
-    result = workflow.apply_async()
+    # Create a chain: first double the number, then add 10
+    # The .s() creates a "signature" - a partial application of the task
+    task_chain = chain(exercise4_double_number.s(number), exercise4_add_ten.s())
+    result = task_chain.apply_async()
     return result.get(timeout=10)
 
 
@@ -121,11 +139,20 @@ def run_task_group(numbers: list[int]) -> list[int]:
     TODO: Create a group of tasks that all run in parallel
 
     Requirements:
-    - Import: from celery import group
     - Create a group that doubles each number in the list
     - Use group(task.s(arg) for arg in args) pattern
     - Call .apply_async() on the group
     - Return list of all results with .get(timeout=10)
+
+    What is .s() here?
+    In groups, .s() creates signatures for each task. Each signature
+    gets its own arguments and runs independently in parallel.
+
+    Example with numbers = [1, 2, 3]:
+    - exercise4_double_number.s(1) -> signature for "double 1"
+    - exercise4_double_number.s(2) -> signature for "double 2"
+    - exercise4_double_number.s(3) -> signature for "double 3"
+    - group() runs all three signatures in parallel -> [2, 4, 6]
 
     Example: numbers = [1, 2, 3] should return [2, 4, 6]
 
@@ -135,10 +162,10 @@ def run_task_group(numbers: list[int]) -> list[int]:
     handle more complex scenarios like partial failures.
     """
     # SOLUTION:
-    from celery import group
-
-    job = group(exercise4_double_number.s(num) for num in numbers)
-    result = job.apply_async()
+    # Create a group that doubles each number in parallel
+    # The .s() creates signatures for each task
+    task_group = group(exercise4_double_number.s(num) for num in numbers)
+    result = task_group.apply_async()
     return result.get(timeout=10)
 
 
@@ -182,25 +209,23 @@ def run_mixed_workload() -> dict[str, list[str] | list[int]]:
     }
     """
     # SOLUTION:
-
     # Start CPU-intensive tasks on 'compute' queue
-    cpu_tasks = [
-        exercise5_cpu_intensive_task.apply_async(args=[4], queue="compute"),  # pyright: ignore[reportArgumentType]
-        exercise5_cpu_intensive_task.apply_async(args=[9], queue="compute"),  # pyright: ignore[reportArgumentType]
-    ]
+    cpu_task1 = exercise5_cpu_intensive_task.apply_async((4,), queue="compute")
+    cpu_task2 = exercise5_cpu_intensive_task.apply_async((9,), queue="compute")
 
     # Start I/O tasks on 'io' queue
-    io_tasks = [
-        exercise5_io_task.apply_async(args=["data.csv"], queue="io"),  # pyright: ignore[reportArgumentType]
-        exercise5_io_task.apply_async(args=["report.pdf"], queue="io"),  # pyright: ignore[reportArgumentType]
-    ]
+    io_task1 = exercise5_io_task.apply_async(("data.csv",), queue="io")
+    io_task2 = exercise5_io_task.apply_async(("report.pdf",), queue="io")
 
-    # Start quick tasks on default queue (no queue specified)
-    quick_tasks = [exercise5_quick_task.apply_async(args=["hello"]), exercise5_quick_task.apply_async(args=["world"])]  # pyright: ignore[reportArgumentType]
+    # Start quick tasks on default queue (no queue parameter = 'celery' queue)
+    quick_task1 = exercise5_quick_task.apply_async(("hello",))
+    quick_task2 = exercise5_quick_task.apply_async(("world",))
 
-    # Collect results
-    cpu_results = [task.get(timeout=10) for task in cpu_tasks]
-    io_results = [task.get(timeout=10) for task in io_tasks]
-    quick_results = [task.get(timeout=10) for task in quick_tasks]
+    # Collect all results
+    cpu_results = [cpu_task1.get(timeout=10), cpu_task2.get(timeout=10)]
+
+    io_results = [io_task1.get(timeout=10), io_task2.get(timeout=10)]
+
+    quick_results = [quick_task1.get(timeout=10), quick_task2.get(timeout=10)]
 
     return {"cpu_results": cpu_results, "io_results": io_results, "quick_results": quick_results}

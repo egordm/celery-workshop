@@ -7,6 +7,8 @@ uv run celery -A celery_workshop.celery worker --loglevel=info
 
 from typing import TYPE_CHECKING
 
+# Import the configured Celery app instead of tasks directly
+from celery_workshop.celery import app
 from celery_workshop.chapter1 import exercise1_add_numbers
 
 if TYPE_CHECKING:
@@ -16,6 +18,8 @@ if TYPE_CHECKING:
 def main():
     """Trigger some tasks and show results."""
     print("🚀 Triggering Celery tasks...")
+
+    app.set_current()
 
     # Single task
     result = exercise1_add_numbers.delay(10, 20)
