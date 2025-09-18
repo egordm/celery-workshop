@@ -174,5 +174,9 @@ switch = [
   ], ignore_fail = "return_non_zero" },
 ]
 
+[tool.poe.tasks.solutions]
+help = "Manage solutions in the codebase"
+cmd = "uv run ./scripts/manage_solutions.py"
+
 [tool.uv.sources]
 celery-workshop = { workspace = true }
