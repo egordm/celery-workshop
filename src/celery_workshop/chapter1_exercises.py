@@ -37,9 +37,10 @@ def run_add_numbers(x: int, y: int) -> int:
     - Get the result with .get(timeout=10)
     - Return the result
     """
-    # SOLUTION:
+    # START SOLUTION
     result = exercise1_add_numbers.delay(x, y)
     return result.get(timeout=10)
+    # END SOLUTION
 
 
 # =============================================================================
@@ -54,14 +55,13 @@ def run_add_numbers(x: int, y: int) -> int:
 # - Add a 0.1 second delay with time.sleep(0.1)
 
 
-# SOLUTION:
-
-
+# START SOLUTION
 @shared_task(name="exercise2_greet_user")
 def exercise2_greet_user(name: str) -> str:
     """Greet a user with a personalized message"""
     time.sleep(0.1)  # Simulate work
     return f"Hello, {name}!"
+# END SOLUTION
 
 
 # =============================================================================
@@ -88,7 +88,7 @@ def run_multiple_tasks(numbers: list[tuple[int, int]]) -> list[int]:
     - Exercise 4b (run_task_group): Uses Celery's group() primitive - more
       elegant and optimized for production
     """
-    # SOLUTION:
+    # START SOLUTION
     results: list[AsyncResult[int]] = []
     for x, y in numbers:
         result = exercise3_multiply_numbers.delay(x, y)
@@ -96,6 +96,7 @@ def run_multiple_tasks(numbers: list[tuple[int, int]]) -> list[int]:
 
     # Wait for all results
     return [result.get(timeout=10) for result in results]
+    # END SOLUTION
 
 
 # =============================================================================
@@ -126,12 +127,13 @@ def run_task_chain(number: int) -> int:
 
     Example: number = 5 -> double (10) -> add ten (20)
     """
-    # SOLUTION:
+    # START SOLUTION
     # Create a chain: first double the number, then add 10
     # The .s() creates a "signature" - a partial application of the task
     task_chain = chain(exercise4_double_number.s(number), exercise4_add_ten.s())
     result = task_chain.apply_async()
     return result.get(timeout=10)
+    # END SOLUTION
 
 
 def run_task_group(numbers: list[int]) -> list[int]:
@@ -161,12 +163,13 @@ def run_task_group(numbers: list[int]) -> list[int]:
     the same thing manually. group() provides better optimization and can
     handle more complex scenarios like partial failures.
     """
-    # SOLUTION:
+    # START SOLUTION
     # Create a group that doubles each number in parallel
     # The .s() creates signatures for each task
     task_group = group(exercise4_double_number.s(num) for num in numbers)
     result = task_group.apply_async()
     return result.get(timeout=10)
+    # END SOLUTION
 
 
 # =============================================================================
@@ -208,7 +211,7 @@ def run_mixed_workload() -> dict[str, list[str] | list[int]]:
         'quick_results': ['Quick: hello', 'Quick: world']
     }
     """
-    # SOLUTION:
+    # START SOLUTION
     # Start CPU-intensive tasks on 'compute' queue
     cpu_task1 = exercise5_cpu_intensive_task.apply_async((4,), queue="compute")
     cpu_task2 = exercise5_cpu_intensive_task.apply_async((9,), queue="compute")
@@ -229,3 +232,4 @@ def run_mixed_workload() -> dict[str, list[str] | list[int]]:
     quick_results = [quick_task1.get(timeout=10), quick_task2.get(timeout=10)]
 
     return {"cpu_results": cpu_results, "io_results": io_results, "quick_results": quick_results}
+    # END SOLUTION
